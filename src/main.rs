@@ -10,7 +10,7 @@ struct CfResponse {
     result: Vec<Record>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 struct Record {
     id: String,
     zone_id: String,
@@ -124,7 +124,8 @@ fn update_records(config: Config, records: Vec<Record>, ip: String) {
         headers.append(CONTENT_TYPE, "application/json".parse().unwrap());
         headers.append(AUTHORIZATION, format!("Bearer {}", config.cf_api_key).parse().unwrap());
 
-        let mut patch = record.clone();
+        let record_name = record.name.clone();
+        let mut patch = record;
         patch.content = ip.clone();
 
         let client = reqwest::blocking::Client::new();
@@ -134,8 +135,8 @@ fn update_records(config: Config, records: Vec<Record>, ip: String) {
             .send();
 
         match resp {
-            Ok(_) => println!("Successfully updated record {}", record.name),
-            Err(e) => eprintln!("Failed to update record {}: {}", record.name, e),
+            Ok(_) => println!("Successfully updated record {}", record_name),
+            Err(e) => eprintln!("Failed to update record {}: {}", record_name, e),
         }
     });
 }
