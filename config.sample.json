@@ -1,0 +1,12 @@
+{
+    "cf_api_key": "<cloudflare api key>",
+    "records_to_update": {
+        "<zone_id>": {
+            "zone_id": "<zone_id>",
+            "records": [
+                "something.yourdoma.in",
+                "other.yourdoma.in"
+            ]
+        }
+    }
+}
