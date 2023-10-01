@@ -1,4 +1,7 @@
-use reqwest::header::{HeaderMap, CONTENT_TYPE, AUTHORIZATION};
+use reqwest::{
+    header::{HeaderMap, CONTENT_TYPE, AUTHORIZATION},
+    Response,
+};
 use serde::{Serialize, Deserialize};
 use crate::config::Config;
 use std::error::Error;
@@ -10,7 +13,7 @@ pub struct CfResponse {
     pub result: Vec<Record>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Record {
     pub id: String,
     pub zone_id: String,
@@ -20,7 +23,32 @@ pub struct Record {
     pub content: String,
 }
 
-pub fn get_records_for_zone(config: &Config, zone_id: &String, ip: &String) -> Result<Vec<Record>, Box<dyn Error>> {
+impl Record {
+    async fn update(self, config: &Config, ip: &str) -> Result<Response, reqwest::Error> {
+        let url = format!("https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records/{record_id}",
+            zone_id = self.zone_id,
+            record_id = self.id
+        );
+
+        println!("Updating {}...", self.name);
+
+        let mut headers: HeaderMap = HeaderMap::new();
+        headers.append(CONTENT_TYPE, "application/json".parse().unwrap());
+        headers.append(AUTHORIZATION, format!("Bearer {}", config.cf_api_key).parse().unwrap());
+
+        let mut patch = self;
+        patch.content = ip.to_owned();
+
+        let client = reqwest::Client::new();
+        client.put(url)
+            .headers(headers)
+            .json(&patch)
+            .send()
+            .await
+    }
+}
+
+pub async fn get_records_for_zone(config: &Config, zone_id: &String, ip: &String) -> Result<Vec<Record>, Box<dyn Error>> {
     let url = format!("https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records",
                                zone_id = zone_id);
     
@@ -33,11 +61,13 @@ pub fn get_records_for_zone(config: &Config, zone_id: &String, ip: &String) -> R
     headers.append(CONTENT_TYPE, "application/json".parse().unwrap());
     headers.append(AUTHORIZATION, format!("Bearer {}", api_key).parse().unwrap());
 
-    let client = reqwest::blocking::Client::new();
+    let client = reqwest::Client::new();
     let resp: CfResponse = client.get(url)
         .headers(headers)
-        .send()?
-        .json()?;
+        .send()
+        .await?
+        .json()
+        .await?;
 
     let mut filtered: Vec<Record> = Vec::new();
     resp.result.into_iter().for_each(|item| {
@@ -49,31 +79,16 @@ pub fn get_records_for_zone(config: &Config, zone_id: &String, ip: &String) -> R
     Ok(filtered)
 }
 
-pub fn update_records(config: Config, records: Vec<Record>, ip: &str) {
-    records.into_iter().for_each(|record| {
-        let url = format!("https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records/{record_id}",
-                                zone_id = record.zone_id,
-                                record_id = record.id);
-
-        let mut headers: HeaderMap = HeaderMap::new();
-        headers.append(CONTENT_TYPE, "application/json".parse().unwrap());
-        headers.append(AUTHORIZATION, format!("Bearer {}", config.cf_api_key).parse().unwrap());
-
+pub async fn update_records(config: Config, records: Vec<Record>, ip: &str) {
+    for record in records {
         let record_name = record.name.clone();
-        let mut patch = record;
-        patch.content = ip.to_owned();
-
-        let client = reqwest::blocking::Client::new();
-        let resp = client.put(url)
-            .headers(headers)
-            .json(&patch)
-            .send();
+        let resp = record.update(&config, ip).await;
 
         match resp {
             Ok(_) => println!("Successfully updated record {}", record_name),
             Err(e) => eprintln!("Failed to update record {}: {}", record_name, e),
         }
-    });
+    };
 }
 
 fn record_filter(config: &Config, record: &Record, new_ip: &String) -> bool {

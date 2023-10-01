@@ -6,9 +6,10 @@ struct IP {
     origin: String
 }
 
-pub fn get_public_ip() -> Result<String, Box<dyn Error>> {
-    let resp: IP = reqwest::blocking::get("https://httpbin.org/ip")?
-        .json()?;
+pub async fn get_public_ip() -> Result<String, Box<dyn Error>> {
+    let resp: IP = reqwest::get("https://httpbin.org/ip").await?
+        .json()
+        .await?;
     
     Ok(resp.origin)
 }
