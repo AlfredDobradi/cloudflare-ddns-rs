@@ -1,5 +1,5 @@
 use clap::Parser;
-use std::error::Error;
+use error::ApplicationError;
 
 mod command;
 mod config;
@@ -8,7 +8,7 @@ mod record;
 mod error;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+async fn main() -> Result<(), ApplicationError> {
     let args = command::Args::parse();
     let config = config::read_config(&args.config)?;
 
