@@ -1,5 +1,5 @@
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use serde::{Serialize, Deserialize};
 use std::{error::Error, fs::File};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

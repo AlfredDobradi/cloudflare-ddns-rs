@@ -1,3 +1,4 @@
 .vscode
 /target
 config.json
+config.test.json
