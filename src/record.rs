@@ -1,10 +1,9 @@
-use crate::config::Config;
+use crate::{config::Config, error::ApplicationError};
 use reqwest::{
     header::{HeaderMap, AUTHORIZATION, CONTENT_TYPE},
     Response,
 };
 use serde::{Deserialize, Serialize};
-use std::error::Error;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CfResponse {
@@ -62,7 +61,7 @@ pub async fn get_records_for_zone(
     config: &Config,
     zone_id: &String,
     ip: &String,
-) -> Result<Vec<Record>, Box<dyn Error>> {
+) -> Result<Vec<Record>, ApplicationError> {
     let url = format!(
         "https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records",
         zone_id = zone_id
