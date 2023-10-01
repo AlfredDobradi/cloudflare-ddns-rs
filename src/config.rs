@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::{error::Error, fs::File};
+use std::fs::File;
+
+use crate::error;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ZoneConfig {
@@ -14,7 +16,7 @@ pub struct Config {
     pub records_to_update: HashMap<String, ZoneConfig>,
 }
 
-pub fn read_config(path: &str) -> Result<Config, Box<dyn Error>> {
+pub fn read_config(path: &str) -> Result<Config, error::ApplicationError> {
     let config_file = File::open(path)?;
 
     let config: Config = serde_json::from_reader(config_file)?;

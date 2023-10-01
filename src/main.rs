@@ -5,6 +5,7 @@ mod command;
 mod config;
 mod ip;
 mod record;
+mod error;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
