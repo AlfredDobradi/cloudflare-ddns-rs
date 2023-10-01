@@ -4,6 +4,6 @@ use clap::Parser;
 #[command(author, version, about, long_about = None)]
 pub struct Args {
     /// Name of the person to greet
-    #[arg(short, long, default_value="config.json")]
+    #[arg(short, long, default_value = "config.json")]
     pub config: String,
 }

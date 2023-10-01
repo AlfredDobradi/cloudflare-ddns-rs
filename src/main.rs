@@ -1,10 +1,10 @@
-use std::error::Error;
 use clap::Parser;
+use std::error::Error;
 
 mod command;
-mod record;
 mod config;
 mod ip;
+mod record;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -15,7 +15,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     println!("Public IP: {}", public_ip);
 
-    // let mut threads = 
+    // let mut threads =
     let records = config.records_to_update.clone();
     for item in records {
         let zone_id = item.1.zone_id.clone();
@@ -23,10 +23,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
         match record::get_records_for_zone(&config, &zone_id, &public_ip).await {
             Ok(r) => {
                 record::update_records(config.clone(), r, &public_ip).await;
-            },
+            }
             Err(e) => eprintln!("error: {}", e),
         };
     }
-    
+
     Ok(())
 }
