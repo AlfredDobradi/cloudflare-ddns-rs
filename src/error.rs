@@ -1,9 +1,24 @@
+use std::fmt::Display;
+
 use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum ApplicationError {
-    #[error("failed to read file")]
-    IOError(#[from] std::io::Error),
-    #[error("failed to decode config")]
-    JSONError(#[from] serde_json::Error),
+    IOError{
+        #[from]
+        source: std::io::Error,
+    },
+    JSONError{
+        #[from]
+        source: serde_json::Error,
+    },
+}
+
+impl Display for ApplicationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ApplicationError::IOError { source } => write!(f, "{source}"),
+            ApplicationError::JSONError { source } => write!(f, "{source}")
+        }
+    }
 }
