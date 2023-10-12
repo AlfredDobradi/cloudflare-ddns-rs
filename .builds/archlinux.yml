@@ -1,0 +1,31 @@
+# Build pipeline for alacrity-rs
+image: archlinux
+packages:
+  - git
+  - openssh
+  - rustup
+  - base-devel
+  - gcc12
+
+sources:
+  - https://git.sr.ht/~barveyhirdman/cloudflare-ddns
+
+tasks:
+  - signoff: |
+      cd cloudflare-ddns
+      if [ "$BUILD_REASON" = "patchset" ]
+      then
+        if ! git log --format='%b' origin/main^^.. | grep 'Signed-off-by' > /dev/null
+        then
+          echo "Patch missing Signed-off-by"
+          exit 1
+        fi
+      fi
+
+  - rustup: rustup toolchain install stable
+
+  - code-health: |
+      cd cloudflare-ddns
+      CXX=g++-12 CC=gcc-12 cargo test --all-features
+
+# cSpell: ignore devel
